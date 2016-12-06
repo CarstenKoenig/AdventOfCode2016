@@ -16,7 +16,4 @@ needs you to retrieve all fifty stars by December 25th.
 - [Day 3](./Day3/readme.md)
 - [Day 4](./Day4/readme.md)
 - [Day 5](./Day5/readme.md)
-
-## My Details
-
-Account-ID: 124072-20161202-df71b000
+- [Day 6](./Day6/readme.md)
