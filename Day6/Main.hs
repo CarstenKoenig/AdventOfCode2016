@@ -46,9 +46,19 @@ mostOccuringChar =
   fst . head . reverse . sortBy (compare `on` snd) .  M.toList
 
 
+leastOccuringChar :: Frequency -> Char
+leastOccuringChar =
+  fst . head .  sortBy (compare `on` snd) .  M.toList
+
+
 decodeMessage :: Received -> String
 decodeMessage =
   map (mostOccuringChar . snd) . M.toList
+
+decodeMessage' :: Received -> String
+decodeMessage' =
+  map (leastOccuringChar . snd) . M.toList
+
 
 input :: IO [String]
 input = lines <$> readFile "input.txt"
@@ -57,6 +67,10 @@ input = lines <$> readFile "input.txt"
 main :: IO ()
 main = do
   received <- processLines <$> input
-  let message = decodeMessage received
-  print message
+  putStr "Part1: "
+  print $ decodeMessage received
+  
+  putStr "Part2: "
+  print $ decodeMessage' received
+  
   putStrLn "all done"
