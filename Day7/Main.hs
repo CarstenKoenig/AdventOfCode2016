@@ -5,7 +5,7 @@ module Main where
 import Data.Maybe (catMaybes, mapMaybe)
 import Data.Function (on)
 import Data.Ord (comparing)
-import Data.List (foldl', sortBy)
+import Data.List (foldl', sortBy, intersect)
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -28,6 +28,13 @@ isTLS (IP7 blocks) =
   && (any containsABBA $ normals blocks)
 
 
+isSSL :: IP7 -> Bool
+isSSL (IP7 blocks) =
+  let abs = concatMap abas $ normals blocks
+      bas = concatMap babs $ hypernets blocks
+  in not (null $ abs `intersect` bas)
+
+
 hypernets :: [IP7Block] -> [String]
 hypernets = mapMaybe pickHyper
   where pickHyper (Hypernet b) = Just b
@@ -45,6 +52,20 @@ containsABBA (a:xs@(b:b':a':_))
   | a == a' && a /= b && b == b' = True
   | otherwise = containsABBA xs
 containsABBA _ = False
+
+
+abas :: String -> [String]
+abas (a:xs@(b:a':_))
+  | a == a' && a /= b = [a,b,a] : abas xs
+  | otherwise = abas xs
+abas _ = []
+
+
+babs :: String -> [String]
+babs (b:xs@(a:b':_))
+  | b == b' && a /= b = [a,b,a] : babs xs
+  | otherwise = babs xs
+babs _ = []
 
 
 ip7Parser :: Parser IP7
@@ -79,9 +100,14 @@ main :: IO ()
 main = do
   addresses <- catMaybes . fmap (eval ip7Parser) <$> input
   let nrTls = length $ filter isTLS addresses
+  let nrSSL = length $ filter isSSL addresses
   print nrTls
+  print nrSSL
   putStrLn "all done"
 
 
 example :: String
 example = "ioxxoj[asdfgh]zxcvbn"
+
+example' :: String
+example' = "zazbz[bzb]cdb"
