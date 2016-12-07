@@ -1,19 +1,13 @@
-{-# LANGUAGE OverloadedStrings  #-}
-
 module Main where
 
 import Data.Maybe (catMaybes, mapMaybe)
-import Data.Function (on)
-import Data.Ord (comparing)
-import Data.List (foldl', sortBy, intersect)
-import Data.Map (Map)
-import qualified Data.Map as M
+import Data.List (intersect)
 
 import Parser
 
 
 data IP7Block
-  = Normal String
+  = Supernet String
   | Hypernet String
   deriving Show
 
@@ -25,12 +19,12 @@ newtype IP7
 isTLS :: IP7 -> Bool
 isTLS (IP7 blocks) =
   not (any containsABBA $ hypernets blocks)
-  && (any containsABBA $ normals blocks)
+  && (any containsABBA $ supernets blocks)
 
 
 isSSL :: IP7 -> Bool
 isSSL (IP7 blocks) =
-  let abs = concatMap abas $ normals blocks
+  let abs = concatMap abas $ supernets blocks
       bas = concatMap babs $ hypernets blocks
   in not (null $ abs `intersect` bas)
 
@@ -41,10 +35,10 @@ hypernets = mapMaybe pickHyper
         pickHyper _ = Nothing
   
 
-normals :: [IP7Block] -> [String]
-normals = mapMaybe pickNormal
-  where pickNormal (Normal b) = Just b
-        pickNormal _ = Nothing
+supernets :: [IP7Block] -> [String]
+supernets = mapMaybe pickSupers
+  where pickSupers (Supernet b) = Just b
+        pickSupers _ = Nothing
   
 
 containsABBA :: String -> Bool
@@ -62,15 +56,13 @@ abas _ = []
 
 
 babs :: String -> [String]
-babs (b:xs@(a:b':_))
-  | b == b' && a /= b = [a,b,a] : babs xs
-  | otherwise = babs xs
-babs _ = []
+babs = map invert . abas
+  where invert [a,b,_] = [b,a,b]
 
 
 ip7Parser :: Parser IP7
 ip7Parser = do
-  blocks <- parseMany (parseEither hyperParser normalParser)
+  blocks <- parseMany (parseEither hyperParser superParser)
   return $ IP7 blocks
 
 
@@ -84,12 +76,12 @@ hyperParser = do
     else return $ Hypernet i
 
 
-normalParser :: Parser IP7Block  
-normalParser = do
+superParser :: Parser IP7Block  
+superParser = do
   i <- parseAlphas
   if null i
     then failParse
-    else return $ Normal i
+    else return $ Supernet i
 
 
 input :: IO [String]
@@ -99,15 +91,21 @@ input = lines <$> readFile "input.txt"
 main :: IO ()
 main = do
   addresses <- catMaybes . fmap (eval ip7Parser) <$> input
-  let nrTls = length $ filter isTLS addresses
+  
+  putStr "number TLS: "
+  let nrTLS = length $ filter isTLS addresses
+  print nrTLS
+
+  putStr "number SSL: "
   let nrSSL = length $ filter isSSL addresses
-  print nrTls
   print nrSSL
+  
   putStrLn "all done"
 
 
 example :: String
 example = "ioxxoj[asdfgh]zxcvbn"
+
 
 example' :: String
 example' = "zazbz[bzb]cdb"
