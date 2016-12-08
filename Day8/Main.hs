@@ -102,4 +102,5 @@ main = do
   let (Screen screen) = foldl' apply emptyScreen actions
   let numberOn = length . filter id $ concat screen
   putStrLn $ "there are " ++ show numberOn ++ " pixels on"
+  print (Screen screen)
   putStrLn "all done"
