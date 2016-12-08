@@ -1,6 +1,7 @@
 module Parser where
 
 import Data.Char (isDigit, isSpace, isAlpha)
+import Data.List (isPrefixOf)
 
 
 newtype Parser a
@@ -70,6 +71,14 @@ parseChar f =
             case inp of
               c:rem | f c -> Just (c, rem)
               _ -> Nothing)
+
+  
+parseString :: String -> Parser ()
+parseString s =
+  Parser (\inp ->
+            if s `isPrefixOf` inp
+            then Just ((), drop (length s) inp)
+            else Nothing)
   
 
 parseDigits :: Parser String
