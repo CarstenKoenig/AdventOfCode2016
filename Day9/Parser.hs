@@ -97,12 +97,12 @@ parseAlphas :: Parser String
 parseAlphas = parseMany parseAlpha
 
 
-parseN :: Int -> Parser String
-parseN 0 = pure ""
-parseN n = do
-  c <- parseAny
-  cs <- parseN (n-1)
-  return $ c:cs
+parseN :: Parser a -> Int -> Parser [a]
+parseN p 0 = pure []
+parseN p n = do
+  a <- p
+  as <- parseN p (n-1)
+  return $ a:as
 
 
 parseWhiteSpaces :: Parser ()
