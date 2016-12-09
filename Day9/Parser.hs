@@ -65,6 +65,14 @@ parseMany p =
                   Just (xs, rem') -> Just (x:xs, rem'))
 
 
+parseAny :: Parser Char
+parseAny =
+  Parser (\inp ->
+            case inp of
+              c:rem -> Just (c, rem)
+              _ -> Nothing)
+
+
 parseChar :: (Char -> Bool) -> Parser Char
 parseChar f =
   Parser (\inp ->
@@ -87,6 +95,14 @@ parseDigits = parseMany parseDigit
 
 parseAlphas :: Parser String
 parseAlphas = parseMany parseAlpha
+
+
+parseN :: Int -> Parser String
+parseN 0 = pure ""
+parseN n = do
+  c <- parseAny
+  cs <- parseN (n-1)
+  return $ c:cs
 
 
 parseWhiteSpaces :: Parser ()
