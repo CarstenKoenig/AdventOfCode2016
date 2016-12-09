@@ -77,3 +77,14 @@ What is the **decompressed length** of the file using this improved format?
 
 ## Solution
 See [Main](./Main.hs)
+
+---
+
+# Remarks
+My solution for *Part 2* feels hacky at best but it's solving my input.
+
+I'm not really sure if this is what was expected as it could *cut inner
+markers* while parsing the *outer* - but maybe this is actually expected.
+
+The **Elves** where happy and gave me my second star so I just try to not
+overthink it ... *Ho ho ho *
