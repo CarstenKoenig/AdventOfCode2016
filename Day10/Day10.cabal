@@ -14,7 +14,9 @@ cabal-version:       >=1.10
 
 executable Day10
   main-is:             Main.hs
-  other-modules:       Parser
+  other-modules:       Model
+                     , Calculations
+                     , Parser
   -- other-extensions:
   build-depends:       base >=4.9 && < 5
                      , containers
