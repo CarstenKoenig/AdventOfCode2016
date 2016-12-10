@@ -35,6 +35,7 @@ data Instruction
 
 
 type Bots = Map BotNr Bot
+type Outputs = Map Int [Int]
 
 
 feedIn :: Value -> Bot -> Bot
@@ -49,6 +50,15 @@ dispatch inps bots =
     update (Output _, _) = id
     update (ToBot botNr, val) =
       M.adjust (feedIn val) botNr
+
+
+output :: [(Target, Value)] -> Outputs -> Outputs
+output inps outs =
+  foldr update outs inps
+  where
+    update (Output nr, (Value val)) =
+      M.alter (\ acc -> Just (val : fromMaybe [] acc)) nr
+    update (ToBot _, _) = id
 
 
 processBot :: Bot -> (Bot, [(Target, Value)])
@@ -73,14 +83,25 @@ process = M.mapAccum
 step :: [(Target, Value)] -> Bots -> ([(Target, Value)], Bots)
 step inps bots =
   let (out, bots') = process bots
-  in  (out, dispatch inps bots')
+  in (out, dispatch inps bots')
 
 
-steps :: [(Target, Value)] -> Bots -> [Bots]
-steps inps bots =
+steps :: [(Target, Value)] -> Outputs ->  Bots -> [(Bots, Outputs)]
+steps [] outs bots
+  | allIdle bots = [(bots, outs)]
+steps inps outs bots =
   let (out, bots') = step inps bots
-  in bots' : steps out bots'
+      outs' = output out outs
+  in (bots',outs') : steps out outs' bots'
   
+
+isIdle :: Bot -> Bool
+isIdle = null . botInput
+
+
+allIdle :: Bots -> Bool
+allIdle = all isIdle . M.elems
+
 
 bots :: [Instruction] -> Bots
 bots = foldr add M.empty . catMaybes . map getBot
@@ -163,13 +184,20 @@ findJonny (bots : botss) =
     Just jonny -> jonny
     Nothing -> findJonny botss
 
-main :: IO ()
-main = do
+
+work = do
   instr <- input
   let agends = bots instr
   let inps = inputs instr
-  let jonny = findJonny $ steps inps agends
+  return $ steps inps M.empty agends
+
+main :: IO ()
+main = do
+  wrks <- work
+  let jonny = findJonny . map fst $ wrks
   print jonny
+  let finalOutputs = snd $ last wrks
+  print (M.assocs finalOutputs)
   putStrLn "all done"
 
 
