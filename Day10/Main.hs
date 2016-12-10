@@ -1,13 +1,20 @@
 module Main where
 
 import Parser
+import Data.List (find)
 import Data.Maybe (fromMaybe, catMaybes)
+import Data.Map (Map)
+import qualified Data.Map as M
 
 
 type BotNr = Int
 
-newtype Bot
-  = Bot BotNr
+data Bot
+  = Bot
+  { botNr :: BotNr
+  , rule :: (Target, Target)
+  , botInput :: [Int]
+  }
   deriving (Eq, Show)
 
 
@@ -16,15 +23,77 @@ newtype Value
   deriving (Eq, Show)
 
 data Target
-  = ToBot Bot
+  = ToBot BotNr
   | Output Int
   deriving (Eq, Show)
 
 
 data Instruction
-  = BotRule Bot Target Target
-  | Input Bot Value
+  = BotRule Bot
+  | Input Target Value
   deriving (Eq, Show)
+
+
+type Bots = Map BotNr Bot
+
+
+feedIn :: Value -> Bot -> Bot
+feedIn (Value val) bot =
+  bot { botInput = botInput bot ++ [val] }
+
+
+dispatch :: [(Target, Value)] -> Bots -> Bots
+dispatch inps bots =
+  foldr update bots inps
+  where
+    update (Output _, _) = id
+    update (ToBot botNr, val) =
+      M.adjust (feedIn val) botNr
+
+
+processBot :: Bot -> (Bot, [(Target, Value)])
+processBot bot =
+  case botInput bot of
+    (a:b:rem) ->
+      let (low,high) = rule bot
+          out = [(low, Value $ min a b), (high, Value $ max a b)]
+          bot' = bot { botInput = rem }
+      in (bot', out)
+    _ -> (bot, [])
+
+
+process :: Bots -> ([(Target, Value)], Bots)
+process = M.mapAccum
+  (\acc bot ->
+     let (bot', acc') = processBot bot
+     in (acc ++ acc', bot'))
+  []
+
+
+step :: [(Target, Value)] -> Bots -> ([(Target, Value)], Bots)
+step inps bots =
+  let (out, bots') = process bots
+  in  (out, dispatch inps bots')
+
+
+steps :: [(Target, Value)] -> Bots -> [Bots]
+steps inps bots =
+  let (out, bots') = step inps bots
+  in bots' : steps out bots'
+  
+
+bots :: [Instruction] -> Bots
+bots = foldr add M.empty . catMaybes . map getBot
+  where
+    add bot map = M.insert (botNr bot) bot map
+    getBot (BotRule bot) = Just bot
+    getBot _ = Nothing
+
+
+inputs :: [Instruction] -> [(Target, Value)]
+inputs = catMaybes . map getInput
+  where getInput (Input botNr val) = Just (botNr, val)
+        getInput _ = Nothing
 
 
 parseInstruction :: Parser Instruction
@@ -36,34 +105,34 @@ parseInput :: Parser Instruction
 parseInput = do
   val <- parseValue
   parseString "goes to "
-  bot <- parseBot
-  return $ Input bot val
+  bot <- parseBotNr
+  return $ Input (ToBot bot) val
 
 
 parseBotRule :: Parser Instruction
 parseBotRule = do
-  bot <- parseBot
+  bot <- parseBotNr
   parseString "gives low "
   low <- parseTarget
   parseString "and high "
   high <- parseTarget
-  return $ BotRule bot low high
+  return . BotRule $ Bot bot (low, high) []
   
 
 parseTarget :: Parser Target
 parseTarget = do
   parseString "to "
-  parseEither parseOutput (ToBot <$> parseBot)
+  parseEither parseOutput (ToBot <$> parseBotNr)
   where
     parseOutput = do
       parseString "output "
       Output <$> parseNumber
 
 
-parseBot :: Parser Bot      
-parseBot = do
+parseBotNr :: Parser BotNr
+parseBotNr = do
       parseString "bot "
-      Bot <$> parseNumber
+      parseNumber
 
 
 parseValue :: Parser Value
@@ -76,15 +145,37 @@ input :: IO [Instruction]
 input = catMaybes . map (eval parseInstruction) . lines <$> readFile "input.txt"
 
 
+isJonny :: Bot -> Bool
+isJonny bot =
+  case botInput bot of
+    (61 : 17 : _) -> True
+    (17 : 61 : _) -> True
+    _ -> False
+
+
+getJonny :: Bots -> Maybe Bot
+getJonny = find isJonny . M.elems
+
+
+findJonny :: [Bots] -> Bot
+findJonny (bots : botss) =
+  case getJonny bots of
+    Just jonny -> jonny
+    Nothing -> findJonny botss
+
 main :: IO ()
 main = do
   instr <- input
-  print instr
+  let agends = bots instr
+  let inps = inputs instr
+  let jonny = findJonny $ steps inps agends
+  print jonny
   putStrLn "all done"
 
 
 test :: String
 test = "value 5 goes to bot 2"
+
 
 test' :: String
 test' = "bot 0 gives low to output 2 and high to output 0"
