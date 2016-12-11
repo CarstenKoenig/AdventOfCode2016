@@ -2,6 +2,7 @@ module Parser where
 
 import Data.Char (isDigit, isSpace, isAlpha)
 import Data.List (isPrefixOf)
+import Data.Maybe (fromMaybe)
 
 
 newtype Parser a
@@ -64,6 +65,25 @@ parseMany p =
                   Nothing -> Just ([x], rem)
                   Just (xs, rem') -> Just (x:xs, rem'))
 
+
+tryParse :: Parser a -> Parser (Maybe a)
+tryParse p =
+  Parser (\inp ->
+            case runParser p inp of
+              Nothing -> Just (Nothing, inp)
+              Just (x, rem) -> Just (Just x, rem))
+  
+
+parseList :: Parser s -> Parser a -> Parser [a]
+parseList sepP itemP = do
+  h <- itemP
+  tl <- fromMaybe [] <$> tryParse tailP
+  return $ h:tl
+  where
+    tailP = do
+      sepP
+      parseList sepP itemP
+  
 
 parseAny :: Parser Char
 parseAny =
