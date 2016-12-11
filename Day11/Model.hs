@@ -5,19 +5,22 @@ module Model
   ) where
 
 
-import Parser
 import Data.Maybe (catMaybes)
+import Data.Set (Set)
+import qualified Data.Set as S
+
+import Parser
 
 
 data Item
   = Generator Element
   | Microchip Element
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 
-parseItems :: Parser [Item]
-parseItems = do
-  parseList sepP parseItem
+parseItems :: Parser (Set Item)
+parseItems =
+  S.fromList <$> parseList sepP parseItem
   where
     sepP = parseString ", "
 
@@ -49,13 +52,13 @@ parseElement = parseAlphas
 type Floor = String
 
 
-parseFloor :: Parser (Floor, [Item])
+parseFloor :: Parser (Floor, Set Item)
 parseFloor = do
   floor <- parseFloorIntro
   items <- parseEither nothingP parseItems
   return (floor, items)
   where
-    nothingP = parseString "nothing relevant." >> pure []
+    nothingP = parseString "nothing relevant." >> pure S.empty
 
 
 parseFloorIntro :: Parser Floor
