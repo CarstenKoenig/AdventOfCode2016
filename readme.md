@@ -23,3 +23,4 @@ needs you to retrieve all fifty stars by December 25th.
 - [Day 10](./Day10/readme.md)
 - [Day 11](./Day11/readme.md)
 - [Day 12](./Day12/readme.md)
+- [Day 13](./Day13/readme.md)
