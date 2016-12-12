@@ -1,6 +1,6 @@
 module Main where
 
-import Data.List (delete, lookup, sortBy)
+import Data.List (delete, lookup, groupBy, sort)
 import Data.Function (on)
 import Data.Maybe (catMaybes, mapMaybe)
 import Data.Set (Set)
@@ -13,7 +13,7 @@ import Astar
 
 aStarParams :: Parameter State EqState
 aStarParams =
-  Parameter heur neigh dist isSolution stateToEq
+  Parameter heur neigh dist isSolution toEq
   where
     heur start =
       3 * length (floor1 start) +
@@ -51,47 +51,27 @@ data Direction
   deriving (Eq, Show, Ord, Enum)
 
 
-data EqState =
-  EqState { eqElevator :: Int
-          , eqFloor1 :: [EqItem]
-          , eqFloor2 :: [EqItem]
-          , eqFloor3 :: [EqItem]
-          , eqFloor4 :: [EqItem]
-          } deriving (Eq, Show, Ord)
+data EqState = EqState Int [(Int,Int)]
+  deriving (Show, Eq, Ord)
 
-data EqItem
-  = Chip Int
-  | Gen Int
-  deriving (Eq, Show, Ord)
+toEq :: State -> EqState
+toEq state = EqState (elevatorAt state) (pat state)
+  where
+    pat state =
+      sort .
+      map (\ [(_,a),(_,b)] -> (a,b)) .
+      groupBy ((==) `on` fst) . sort $ elemFloor state
 
 
-stateToEq :: State -> EqState
-stateToEq state =
-  let (eqF1, assocs1) = itemsToEq [] (S.toList $ floor1 state)
-      (eqF2, assocs2) = itemsToEq assocs1 (S.toList $ floor2 state)
-      (eqF3, assocs3) = itemsToEq assocs2 (S.toList $ floor3 state)
-      (eqF4, _) = itemsToEq assocs3 (S.toList $ floor4 state)
-  in EqState (elevatorAt state) eqF1 eqF2 eqF3 eqF4
-  
-
-itemsToEq :: [(Element, Int)] -> [Item] -> ([EqItem], [(Element, Int)])
-itemsToEq assocs [] = ([], assocs)
-itemsToEq assocs (i:is) =
-  let (i', assocs') = itemToEq assocs i
-      (is',assocs'') = itemsToEq assocs' is
-  in (i':is',assocs'')
-
-
-itemToEq :: [(Element, Int)] -> Item -> (EqItem, [(Element, Int)])
-itemToEq assocs item =
-  let el = element item
-      next = length assocs
-  in 
-    case lookup el assocs of
-      Nothing -> (toEq item next, (el,next):assocs)
-      Just ind -> (toEq item ind, assocs)
-  where toEq (Microchip _) i = Chip i
-        toEq (Generator _) i = Gen i
+elemFloor :: State -> [(Element, Int)]
+elemFloor state =
+  concat [ col 1 (floor1 state)
+         , col 2 (floor2 state)
+         , col 3 (floor3 state)
+         , col 4 (floor4 state)
+         ]
+  where col f its =
+          map (\ i -> (element i, f)) $ S.toList its
 
 
 element :: Item -> Element
