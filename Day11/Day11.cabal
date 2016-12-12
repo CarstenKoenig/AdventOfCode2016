@@ -20,5 +20,7 @@ executable Day11
   -- other-extensions:
   build-depends:       base >=4.9 && < 5
                      , containers
+                     , array
+                     , bytestring
   -- hs-source-dirs:      
   default-language:    Haskell2010
