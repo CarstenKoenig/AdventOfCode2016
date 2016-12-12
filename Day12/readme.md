@@ -1,61 +1,69 @@
-# Day 10: Balance Bots
+# Day 12: Leonardo's Monorail
 
 ## Part 1
 
-You come upon a factory in which many robots are zooming around handing small
-microchips to each other.
+You finally reach the top floor of this building: a garden with a slanted glass
+ceiling. Looks like there are no more stars to be had.
 
-Upon closer examination, you notice that each bot only proceeds when it has
-**two** microchips, and once it does, it gives each one to a different bot or
-puts it in a marked "output" bin. Sometimes, bots take microchips from "input"
-bins, too.
+While sitting on a nearby bench amidst some tiger lilies, you manage to decrypt
+some of the files you extracted from the servers downstairs.
 
-Inspecting one of the microchips, it seems like they each contain a single
-number; the bots must use some logic to decide what to do with each chip.
-You access the local control computer and download the bots' instructions
-(your puzzle input).
+According to these documents, Easter Bunny HQ isn't just this building - it's a
+collection of buildings in the nearby area. They're all connected by a local
+monorail, and there's another building not far from here! Unfortunately, being
+night, the monorail is currently not operating.
 
-Some of the instructions specify that a specific-valued microchip should be
-given to a specific bot; the rest of the instructions indicate what a given bot
-should do with its *lower-value* or *higher-value* chip.
+You remotely connect to the monorail control systems and discover that the boot
+sequence expects a password. The password-checking logic (your puzzle input) is
+easy to extract, but the code it uses is strange: it's assembunny code designed
+for the new computer you just assembled. You'll have to execute the code and get
+the password.
 
-### example
+The assembunny code you've extracted operates on four registers (`a`, `b`, `c`,
+and `d`) that start at `0` and can hold any integer. However, it seems to make
+use of only a few instructions:
 
-For example, consider the following instructions:
+- `cpy x y` **copies** `x` (either an integer or the value of a register) into
+register `y`.
+
+- `inc x` **increases** the value of register `x` by one.
+
+- `dec x` **decreases** the value of register `x` by one.
+
+- `jnz x y` jumps to an instruction `y` away (positive means forward; negative
+means backward), but only if `x` is *not zero*.
+
+The `jnz` instruction moves relative to itself: an offset of `-1` would continue
+at the previous instruction, while an offset of `2` would skip over the next
+instruction.
+
+### Example
+For example:
 
 ```
-value 5 goes to bot 2
-bot 2 gives low to bot 1 and high to bot 0
-value 3 goes to bot 1
-bot 1 gives low to output 1 and high to bot 0
-bot 0 gives low to output 2 and high to output 0
-value 2 goes to bot 2
+cpy 41 a
+inc a
+inc a
+dec a
+jnz a 2
+dec a
 ```
 
-- Initially, bot `1` starts with a value-`3` chip, and bot `2` starts with a
-value-`2` chip and a value-`5` chip.
+The above code would set register `a` to `41`, increase its value by `2`,
+decrease its value by `1`, and then skip the last `dec a` (because `a` is not
+zero, so the `jnz a 2` skips it), leaving register `a` at `42`. When you move
+past the last instruction, the program halts.
 
-- Because bot `2` has two microchips, it gives its lower one (`2`) to bot `1`
-and its higher one (`5`) to bot `0`.
+After executing the assembunny code in your puzzle input, **what value is left
+in register** `a`?
 
-- Then, bot `1` has two microchips; it puts the value-`2` chip in output `1` and
-gives the value-`3  chip to bot `0`.
+## Part 2
 
-- Finally, bot `0  has two microchips; it puts the `3` in output `2` and the `5`
-in output `0`.
+As you head down the fire escape to the monorail, you notice it didn't start;
+register `c` needs to be initialized to the position of the ignition key.
 
-In the end, output bin `0` contains a value-`5` microchip, output bin `1`
-contains a value-`2` microchip, and output bin `2` contains a value-`3`
-microchip. In this configuration, bot number `2` is responsible for comparing
-value-`5` microchips with value-`2` microchips.
-
-Based on your instructions, **what is the number of the bot** that is
-responsible for comparing value-`61` microchips with value-`17` microchips?
-
-## Part Two
-
-What do you get if you multiply together the values of one chip in each of
-outputs `0`, `1`, and `2`?
+If you instead initialize register `c` to be `1`, what value is now left in
+register `a`?
 
 
 ## Solution
