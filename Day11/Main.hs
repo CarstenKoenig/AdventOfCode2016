@@ -8,6 +8,34 @@ import qualified Data.Set as S
 
 import Model
 import Parser (eval)
+import Astar
+
+
+aStarParams :: Parameter State EqState
+aStarParams =
+  Parameter heur neigh dist isSolution stateToEq
+  where
+    heur start =
+      3 * length (floor1 start) +
+      2 * length (floor2 start) +
+      1 * length (floor3 start)
+      
+    neigh node =
+      [ s | d <- directions node
+      , (i1, i2o) <- pickItems d node
+      , let s = move d i1 i2o node
+      , validState node ]
+      
+    dist start goal = 1
+
+
+solveFrom :: State -> [State]
+solveFrom = aStar aStarParams
+
+
+answerFrom :: State -> Int
+answerFrom = (+  (-1)) . length . solveFrom
+
 
 data State =
   State { elevatorAt :: Int
@@ -69,41 +97,6 @@ itemToEq assocs item =
 element :: Item -> Element
 element (Microchip el) = el
 element (Generator el) = el
-
-
-solutions :: State -> [(Integer, State)]
-solutions state =
-  findSolutions S.empty [(0,state)]
-
-
-findSolutions :: Set EqState -> [(Integer, State)] -> [(Integer, State)]
-findSolutions _ [] = []
-findSolutions visited ((steps, state):nexts) =
-  let visited' = S.insert (stateToEq state) visited
-      nexts' = nexts ++ (map (\st -> (steps+1,st)) $ possibleFrom visited' state)
-      sols = findSolutions visited' (prevereUp nexts')
-  in if isSolution state
-     then (steps, state) : sols
-     else sols
-  where
-    prevereUp list = sortBy (compare `on` evaluate) list
-    evaluate (cnt, state) =
-      let pts =
-            length (floor3 state)
-            + 2 * length (floor2 state)
-            + 4 * length (floor1 state)
-      in (cnt, pts)
-
-
-
-possibleFrom :: Set EqState -> State -> [State]
-possibleFrom visited state =
-  [ s | d <- directions state
-      , (i1, i2o) <- pickItems d state
-      , let s = move d i1 i2o state
-      , validState s
-      , not (S.member (stateToEq s) visited)
-  ]
 
 
 isSolution :: State -> Bool
@@ -232,16 +225,8 @@ puzzle = do
   return $ State 1 f1 f2 f3 f4
 
 
-solve :: State -> Maybe Integer
-solve state =
-  let sols = solutions state
-  in case sols of
-      [] -> Nothing
-      ((steps,_):_) -> Just steps
-
-
-solvePuzzle :: IO (Maybe Integer)
-solvePuzzle = solve <$> puzzle
+solvePuzzle :: IO Int
+solvePuzzle = answerFrom <$> puzzle
 
 
 main :: IO ()
@@ -259,23 +244,3 @@ testPuzzle =
     (S.fromList [Generator "H"])
     (S.singleton (Generator "L"))
     S.empty
-
-
-testPuzzle' :: State
-testPuzzle' =
-  State
-    2
-    (S.fromList [Microchip "L"])
-    (S.fromList [Microchip "H"])
-    (S.fromList [Generator "H", Generator "L"])
-    S.empty
-
-
-testPuzzle'' :: State
-testPuzzle'' =
-  State
-    3
-    (S.fromList [])
-    (S.fromList [])
-    (S.fromList [Microchip "H", Microchip "L"])
-    (S.fromList [Generator "H", Generator "L"])
