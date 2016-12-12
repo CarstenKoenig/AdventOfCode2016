@@ -211,6 +211,15 @@ inputCPU :: IO CPU
 inputCPU = initialize <$> programm
 
 
+programm2 :: IO Programm
+programm2 =
+  (Cpy (ToValue 1) RegC :) .
+  catMaybes . fmap (eval parseCmd) <$> inputLines
+
+
+inputCPU2 :: IO CPU
+inputCPU2 = initialize <$> programm2
+
 main :: IO ()
 main = do
   ls <- inputLines
