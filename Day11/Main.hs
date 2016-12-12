@@ -54,16 +54,23 @@ data Direction
 data EqState = EqState Int [(Int,Int)]
   deriving (Show, Eq, Ord)
 
+data EqTyp = G | M
+  deriving (Show, Eq, Ord)
+
 toEq :: State -> EqState
 toEq state = EqState (elevatorAt state) (pat state)
   where
     pat state =
       sort .
-      map (\ [(_,a),(_,b)] -> (a,b)) .
+      map (\ [(_,a),(_,b)] ->
+             case (a,b) of
+               ((i,G), (j,M)) -> (i,j)
+               ((j,M), (i,G)) -> (i,j)
+          ) .
       groupBy ((==) `on` fst) . sort $ elemFloor state
 
 
-elemFloor :: State -> [(Element, Int)]
+elemFloor :: State -> [(Element, (Int, EqTyp))]
 elemFloor state =
   concat [ col 1 (floor1 state)
          , col 2 (floor2 state)
@@ -71,12 +78,17 @@ elemFloor state =
          , col 4 (floor4 state)
          ]
   where col f its =
-          map (\ i -> (element i, f)) $ S.toList its
+          map (\ i -> (element i, (f, typ i))) $ S.toList its
 
 
 element :: Item -> Element
 element (Microchip el) = el
 element (Generator el) = el
+
+
+typ :: Item -> EqTyp
+typ (Microchip _) = M
+typ (Generator _) = G
 
 
 isSolution :: State -> Bool
