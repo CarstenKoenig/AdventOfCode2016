@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 executable Day13
   main-is:             Main.hs
   other-modules:       Parser
+                     , Astar
   -- other-extensions:
   build-depends:       base >=4.9 && < 5
                      , containers
