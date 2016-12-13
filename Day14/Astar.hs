@@ -16,6 +16,7 @@ import qualified Data.Set as S
 
 data Parameter node eqNode
   = Parameter { heuristic :: node -> Int
+              , distance :: node -> node -> Int
               , neighbours :: node -> [node]
               , isGoal :: node -> Bool
               , eqClass :: node -> eqNode
@@ -77,7 +78,7 @@ algorithm' env =
 process :: (Ord node, Ord eqNode, Show node) =>
   node -> node -> Environment node eqNode -> Environment node eqNode
 process current neighbor env =
-  let tentativeGScore = gScore env current + 1
+  let tentativeGScore = gScore env current + getDistance env current neighbor
       open' = S.insert neighbor (open env)
       gscr = gScore env neighbor
   in
@@ -100,6 +101,10 @@ finished env = isGoal $ params env
 
 getClass :: Environment node eqNode -> node -> eqNode
 getClass env = eqClass $ params env
+
+
+getDistance :: Environment node eqNode -> node -> node -> Int
+getDistance env a b = distance (params env) a b
 
 
 getNeighbours :: Environment node eqNode -> node -> [node]
