@@ -31,7 +31,7 @@ aStarParams =
   where
     heur (State (x,y)) =
       let (gx,gy) = goal
-      in abs (gx-x) + abs (gy-y) + 1
+      in abs (gx-x) + abs (gy-y)
 
 
 surroundings :: State -> [State]
@@ -83,17 +83,12 @@ move (dx,dy) (State (x,y)) = State (x+dx,y+dy)
 
 directions :: [(Int,Int)]
 directions =
-  [ (-1,0),(1,0),(0,-1),(0,1) ]
+  [ (0,1), (0,-1), (1,0), (-1,0) ]
 
 
 solutionPath :: Path State
 solutionPath =
   aStar aStarParams start
-
-
-solution :: Int
-solution =
-  length solutionPath - 1
 
 
 part2 :: Int
@@ -103,7 +98,9 @@ part2 =
 
 main :: IO ()
 main = do
-  putStrLn $ "part1 : " ++ show solution
+  let path = solutionPath
+  showGrid favNumber 50 50 path
+  putStrLn $ "part1 : " ++ show (length path - 1)
   putStrLn $ "part2 : " ++ show part2
   putStrLn "all done"
 

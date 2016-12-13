@@ -1,4 +1,4 @@
-name:                Day13
+name:                Day14
 version:             0.1.0.0
 -- synopsis:            
 -- description:         
@@ -12,9 +12,10 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
-executable Day13
+executable Day14
   main-is:             Main.hs
-  other-modules:       Astar
+  other-modules:       Parser
+                     , Astar
   -- other-extensions:
   build-depends:       base >=4.9 && < 5
                      , containers
