@@ -1,5 +1,8 @@
 module Main where
 
+import Data.Set (Set)
+import qualified Data.Set as S
+
 import Astar
 
 
@@ -38,6 +41,16 @@ surroundings pos =
          , inside pos'
          , openSpace favNumber pos' ]
 
+
+findSurroundings :: Set State -> [(Int,State)] -> Set State
+findSurroundings visited [] = visited
+findSurroundings visited ((n,cur):nxts)
+  | S.member cur visited = findSurroundings visited nxts
+  | otherwise =
+    let neighs = [ (n-1,pos) | pos <- surroundings cur, let n' = n-1, n' >= 0 ]
+        visited' = S.insert cur visited
+    in findSurroundings visited' (nxts ++ neighs)
+  
 
 openSpace :: Int -> State -> Bool
 openSpace fav (State (x,y)) =
@@ -82,8 +95,16 @@ solution :: Int
 solution =
   length solutionPath - 1
 
+
+part2 :: Int
+part2 =
+  let set = findSurroundings S.empty [(50,start)]
+  in S.size set
+
 main :: IO ()
 main = do
+  putStrLn $ "part1 : " ++ show solution
+  putStrLn $ "part2 : " ++ show part2
   putStrLn "all done"
 
 
@@ -91,6 +112,7 @@ showSolution :: IO ()
 showSolution = do
   let path = solutionPath
   showGrid favNumber 50 50 path
+  
 
 showGrid :: Int -> Int -> Int -> Path State -> IO ()
 showGrid fav w h poss =
