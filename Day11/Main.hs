@@ -13,7 +13,7 @@ import Astar
 
 aStarParams :: Parameter State EqState
 aStarParams =
-  Parameter heur neigh dist isSolution toEq
+  Parameter heur neigh isSolution toEq
   where
     heur start =
       3 * length (floor1 start) +
@@ -25,8 +25,6 @@ aStarParams =
       , (i1, i2o) <- pickItems d node
       , let s = move d i1 i2o node
       , validState node ]
-      
-    dist start goal = 1
 
 
 solveFrom :: State -> [State]

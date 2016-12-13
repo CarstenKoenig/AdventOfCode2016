@@ -17,7 +17,6 @@ import qualified Data.Set as S
 data Parameter node eqNode
   = Parameter { heuristic :: node -> Int
               , neighbours :: node -> [node]
-              , dist :: node -> node -> Int
               , isGoal :: node -> Bool
               , eqClass :: node -> eqNode
               }
@@ -26,7 +25,8 @@ data Parameter node eqNode
 type Path node = [node]
 
 
-aStar :: (Ord eqNode, Ord node) =>  Parameter node eqNode -> node -> Path node
+aStar :: (Ord eqNode, Ord node, Show node) =>
+         Parameter node eqNode -> node -> Path node
 aStar params start =
   let env =
         Env
@@ -54,7 +54,8 @@ data Environment node eqNode
         }
 
 
-algorithm' :: (Ord eqNode, Ord node) => Environment node eqNode -> Path node
+algorithm' :: (Ord eqNode, Ord node, Show node) =>
+              Environment node eqNode -> Path node
 algorithm' env =
   let current = findCurrent env
   in case current of
@@ -73,13 +74,13 @@ algorithm' env =
         in algorithm' env''
 
 
-process :: (Ord node, Ord eqNode) =>
+process :: (Ord node, Ord eqNode, Show node) =>
   node -> node -> Environment node eqNode -> Environment node eqNode
 process current neighbor env =
-  let tentativeGScore = gScore env current + getDistance env current neighbor
+  let tentativeGScore = gScore env current + 1
       open' = S.insert neighbor (open env)
       gscr = gScore env neighbor
-  in 
+  in
     if tentativeGScore >= gscr
     then env { open = open' }
     else env { open = open'
@@ -88,7 +89,7 @@ process current neighbor env =
              , fScores =
                  M.insert
                    neighbor
-                   (gscr + scoreHeuristic env neighbor)
+                   (tentativeGScore + scoreHeuristic env neighbor)
                    (fScores env)
              }
 
@@ -107,10 +108,6 @@ getNeighbours env = neighbours $ params env
 
 scoreHeuristic :: Environment node eqNode -> node -> Int
 scoreHeuristic env = heuristic $ params env
-
-
-getDistance :: Environment node eqNode -> node -> node -> Int
-getDistance env a b = dist (params env) a b
 
 
 findCurrent :: Ord node => Environment node eqNode -> Maybe node
