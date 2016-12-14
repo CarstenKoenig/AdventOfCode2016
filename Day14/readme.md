@@ -1,65 +1,91 @@
-# Day 13: A Maze of Twisty Little Cubicles
+# Day 14: One-Time Pad
 
 ## Part 1
-You arrive at the first floor of this new building to discover a much less
-welcoming environment than the shiny atrium of the last one. Instead, you are in
-a maze of twisty little cubicles, all alike.
 
-Every location in this area is addressed by a pair of non-negative integers
-`(x,y)`. Each such coordinate is either a wall or an open space. You can't move
-diagonally. The cube maze starts at `0,0` and seems to extend infinitely toward
-**positive** `x` and `y`; *negative values* are **invalid**, as they represent a
-location outside the building. You are in a small waiting area at `1,1`.
+In order to communicate securely with Santa while you're on this mission, you've
+been using a one-time pad that you generate using a pre-agreed algorithm.
+Unfortunately, you've run out of keys in your one-time pad, and so you need to
+generate some more.
 
-While it seems chaotic, a nearby morale-boosting poster explains, the layout is
-actually quite logical. You can determine whether a given `x,y` coordinate will
-be a wall or an open space using a simple system:
+To generate keys, you first get a stream of random data by taking the MD5 of a
+pre-arranged salt (your puzzle input) and an increasing integer index (starting
+with 0, and represented in decimal); the resulting MD5 hash should be
+represented as a string of lowercase hexadecimal digits.
 
-- Find `x*x + 3*x + 2*x*y + y + y*y`.
-- Add the office designer's favorite number (your puzzle input).
-- Find the binary representation of that sum; count the **number** of bits that
-are `1`.
-   - If the number of bits that are `1` is **even**, it's an **open space**.
-   - If the number of bits that are `1` is **odd**, it's a **wall**.
-   
+However, not all of these MD5 hashes are keys, and you need 64 new keys for your
+one-time pad. A hash is a key only if:
+
+- It contains three of the same character in a row, like 777. Only consider the
+first such triplet in a hash.
+- One of the next 1000 hashes in the stream contains that same character five
+times in a row, like 77777.
+
+Considering future hashes for five-of-a-kind sequences does not cause those
+hashes to be skipped; instead, regardless of whether the current hash is a key,
+always resume testing for keys starting with the very next hash.
+
 ### Example
-For example, if the office designer's favorite number were `10`, drawing walls
-as `#` and open spaces as `.`, the corner of the building containing `0,0` would
-look like this:
+For example, if the pre-arranged salt is abc:
 
-```
-  0123456789
-0 .#.####.##
-1 ..#..#...#
-2 #....##...
-3 ###.#.###.
-4 .##..#..#.
-5 ..##....#.
-6 #...##.###
-```
+- The first index which produces a triple is 18, because the MD5 hash of abc18
+contains ...cc38887a5.... However, index 18 does not count as a key for your
+one-time pad, because none of the next thousand hashes (index 19 through index
+1018) contain 88888.
 
-Now, suppose you wanted to reach `7,4`. The shortest route you could take is
-marked as `O`:
+- The next index which produces a triple is 39; the hash of abc39 contains eee.
+It is also the first key: one of the next thousand hashes (the one at index 816)
+contains eeeee.
 
-```
-  0123456789
-0 .#.####.##
-1 .O#..#...#
-2 #OOO.##...
-3 ###O#.###.
-4 .##OO#OO#.
-5 ..##OOO.#.
-6 #...##.###
-```
+- None of the next six triples are keys, but the one after that, at index 92,
+is: it contains 999 and index 200 contains 99999.
 
-Thus, reaching `7,4` would take a minimum of `11` steps (starting from your
-current location, `1,1`).
+- Eventually, index 22728 meets all of the criteria to generate the 64th key.
 
-What is the **fewest number of steps required** for you to reach `31,39`?
+So, using our example salt of abc, index 22728 produces the 64th key.
+
+Given the actual salt in your puzzle input, what index produces your 64th
+one-time pad key?
 
 ## Part 2
-**How many locations** (distinct `x,y` coordinates, including your starting
-location) can you reach in at most `50` steps?
+
+Of course, in order to make this process even more secure, you've also
+implemented key stretching.
+
+Key stretching forces attackers to spend more time generating hashes.
+Unfortunately, it forces everyone else to spend more time, too.
+
+To implement key stretching, whenever you generate a hash, before you use it,
+you first find the MD5 hash of that hash, then the MD5 hash of that hash, and so
+on, a total of 2016 additional hashings. Always use lowercase hexadecimal
+representations of hashes.
+
+## Example
+For example, to find the stretched hash for index 0 and salt abc:
+
+- Find the MD5 hash of abc0: 577571be4de9dcce85a041ba0410f29f.
+- Then, find the MD5 hash of that hash: eec80a0c92dc8a0777c619d9bb51e910.
+- Then, find the MD5 hash of that hash: 16062ce768787384c81fe17a7a60c7e3.
+- ...repeat many times...
+- Then, find the MD5 hash of that hash: a107ff634856bb300138cac6568c0f24.
+
+So, the stretched hash for index 0 in this situation is a107ff.... In the end,
+you find the original hash (one use of MD5), then find the
+hash-of-the-previous-hash 2016 times, for a total of 2017 uses of MD5.
+
+The rest of the process remains the same, but now the keys are entirely
+different. Again for salt abc:
+
+- The first triple (222, at index 5) has no matching 22222 in the next
+thousand hashes.
+
+- The second triple (eee, at index 10) hash a matching eeeee at index 89, and so
+it is the first key.
+
+- Eventually, index 22551 produces the 64th key (triple fff with matching fffff
+at index 22859.
+
+Given the actual salt in your puzzle input and using 2016 extra MD5 calls of key
+stretching, what index now produces your 64th one-time pad key?
 
 ## Solution
 See [Main](./Main.hs)
