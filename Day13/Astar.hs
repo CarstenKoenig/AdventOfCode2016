@@ -7,6 +7,9 @@ module Astar
 import Data.Foldable (minimumBy)
 import Data.Function (on)
 
+import Data.PSQueue (PSQ)
+import qualified Data.PSQueue as PQ
+
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -31,7 +34,7 @@ aStar params start =
   let env =
         Env
           S.empty
-          (S.singleton start)
+          (PQ.singleton start 0)
           M.empty
           (initG start)
           (initF start)
@@ -46,7 +49,7 @@ aStar params start =
 
 data Environment node eqNode
   = Env { closed :: Set eqNode
-        , open :: Set node
+        , open :: PSQ node Int
         , cameFrom :: Map node node
         , gScores :: Map node Int
         , fScores :: Map node Int
@@ -64,7 +67,7 @@ algorithm' env =
       | finished env current ->
         constructPath env current
       | otherwise ->
-        let open' = S.delete current $ open env
+        let open' = PQ.delete current $ open env
             closed' = S.insert (getClass env current) $ closed env
             env' = env { closed = closed', open = open' }
             neighs =
@@ -78,7 +81,8 @@ process :: (Ord node, Ord eqNode, Show node) =>
   node -> node -> Environment node eqNode -> Environment node eqNode
 process current neighbor env =
   let tentativeGScore = gScore env current + 1
-      open' = S.insert neighbor (open env)
+      fscr = tentativeGScore + scoreHeuristic env neighbor
+      open' = PQ.insert neighbor fscr  (open env)
       gscr = gScore env neighbor
   in
     if tentativeGScore >= gscr
@@ -89,7 +93,7 @@ process current neighbor env =
              , fScores =
                  M.insert
                    neighbor
-                   (tentativeGScore + scoreHeuristic env neighbor)
+                   fscr
                    (fScores env)
              }
 
@@ -114,9 +118,9 @@ findCurrent :: Ord node => Environment node eqNode -> Maybe node
 findCurrent env =
   let set = open env
   in
-    if S.null set
-    then Nothing
-    else Just $ minimumBy (compare `on` fScore env) set
+    case PQ.findMin set of
+      Nothing -> Nothing
+      Just pgM -> Just (PQ.key pgM)
 
 
 fScore :: Ord node => Environment node eqNode -> node -> Int

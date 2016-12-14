@@ -211,14 +211,31 @@ puzzle = do
   return $ State 1 f1 f2 f3 f4
 
 
+extPuzzle :: IO State
+extPuzzle = do
+  pz <- puzzle
+  let add =
+        S.fromList
+        [ Microchip "elerium", Generator "elerium"
+        , Microchip "dilithium", Generator "dilithium"
+        ]
+  return $ pz { floor1 = S.union (floor1 pz) add }
+
+
 solvePuzzle :: IO Int
 solvePuzzle = answerFrom <$> puzzle
+
+
+solvePuzzleExt :: IO Int
+solvePuzzleExt = answerFrom <$> extPuzzle
 
 
 main :: IO ()
 main = do
   steps <- solvePuzzle
-  putStrLn $ "It took " ++ show steps ++ " steps"
+  putStrLn $ "Part 1: It took " ++ show steps ++ " steps"
+  steps2 <- solvePuzzleExt
+  putStrLn $ "Part 2: It took " ++ show steps2 ++ " steps"
   putStrLn "all done"
 
 
