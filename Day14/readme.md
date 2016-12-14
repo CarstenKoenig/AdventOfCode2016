@@ -89,3 +89,6 @@ stretching, what index now produces your 64th one-time pad key?
 
 ## Solution
 See [Main](./Main.hs)
+
+## remarks
+not the most efficient solution but it runs in a few minutes so it's ok for me right now
