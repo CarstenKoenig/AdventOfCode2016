@@ -1,6 +1,6 @@
 module Main where
 
-import Data.List (intersect, foldr1)
+import Data.List (foldr1)
 
 type Time = Integer
 
@@ -50,6 +50,13 @@ part1 =
   , createDisc 7 5 2
   , createDisc 19 6 17 ]
 
+
+part2 :: [Disc]
+part2 = part1 ++ [ createDisc 11 7 0 ]
+
+
 main :: IO ()
 main = do
+  putStrLn $ "part 1: " ++ show (solution part1)
+  putStrLn $ "part 2: " ++ show (solution part2) 
   putStrLn "all done"
