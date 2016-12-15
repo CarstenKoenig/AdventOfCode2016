@@ -2,6 +2,7 @@
 module Main where
 
 import Data.List (foldr1)
+import Control.Parallel.Strategies (runEval, rpar, rseq)
 
 
 type Time = Integer
@@ -16,6 +17,7 @@ main :: IO ()
 main = do
   putStrLn $ "part 1: " ++ show (solution part1)
   putStrLn $ "part 2: " ++ show (solution part2) 
+  putStrLn $ "part 2(par): " ++ show (head part2Par)
   putStrLn "all done"
 
 
@@ -34,6 +36,16 @@ part1 =
     [ 1.. ]
 
 
+part2Par :: [Integer]
+part2Par = runEval $ do
+  l1 <- rpar (zeros (createDisc 13 11 1) `merge` zeros (createDisc 5 0 2))
+  l2 <- rpar (zeros (createDisc 17 11 3) `merge` zeros (createDisc 3 0 4))
+  l3 <- rpar (zeros (createDisc 7 2 5) `merge` zeros (createDisc 19 17 6))
+  m1 <- rpar (l1 `merge` l2)
+  m2 <- rpar (l3 `merge` zeros (createDisc 11 0 7))
+  res <- rpar (m1 `merge` m2)
+  rseq (take 100 res)
+  
 part2 :: [Disc]
 part2 = part1 ++ [ createDisc 11 0 7 ]
 
