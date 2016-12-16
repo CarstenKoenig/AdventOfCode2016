@@ -59,10 +59,8 @@ testInput = "10000"
 input :: Data
 input = "10001001100000001"
 
-
 testTargetLength :: Int
 testTargetLength = 20
-
 
 targetLength :: Int
 targetLength = 272
@@ -70,4 +68,5 @@ targetLength = 272
 
 main :: IO ()
 main = do
+  putStrLn $ "Part 1: " ++ show (checkSumFor input targetLength)
   putStrLn "all done"

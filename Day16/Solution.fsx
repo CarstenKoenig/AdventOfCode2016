@@ -4,7 +4,8 @@ let input = "10001001100000001"
 
 let testTargetLength = 20
 
-let targetLength = 272
+let targetLength1 = 272
+let targetLength2 = 35651584
 
 let invert (s : string) =
     let inv c =
@@ -36,3 +37,9 @@ let rec checkSum (inp : string) =
 
 let solve toLen inp =
     checkSum (blowUp toLen inp)
+
+let run () =
+    printfn "part 1: %s" (solve targetLength1 input)
+    printfn "part 2: %s" (solve targetLength2 input)
+
+run ()
