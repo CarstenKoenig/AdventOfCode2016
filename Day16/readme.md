@@ -5,4 +5,4 @@
 ## Part 2
 
 ## Solution
-See [Main](./Main.hs)
+See [Solution](./Solution.fsx)
