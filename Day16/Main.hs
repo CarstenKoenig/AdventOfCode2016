@@ -15,20 +15,22 @@ checkSumFor from len =
 
 
 checkSum :: Data -> Data
-checkSum dt =
+checkSum = BS.pack . checkSum' . BS.unpack
+
+
+checkSum' :: String -> String
+checkSum' dt =
   let dt' = reduce dt
-  in if even (BS.length dt')
-     then checkSum dt'
+  in if even (length dt')
+     then checkSum' dt'
      else dt'
 
 
-reduce :: Data -> Data
-reduce input =
-  let (bs,rest) = BS.splitAt 2 input
-  in case BS.unpack bs of
-    [x,y] | x == y -> '1' `BS.cons` reduce rest
-          | otherwise -> '0' `BS.cons` reduce rest
-    _ -> BS.empty
+reduce :: String -> String
+reduce (x:y:xs)
+  | x == y = '1' : reduce xs
+  | otherwise = '0' : reduce xs
+reduce _ = []
 
 
 random :: Data -> Int -> Data
@@ -51,10 +53,9 @@ dragon (len, xs) = (2*len+1, xs `BS.append` ('0' `BS.cons` revInvert xs))
 
 
 revInvert :: Data -> Data
-revInvert = foldl' inv BS.empty
-  where inv xs x = inv' x `BS.cons` xs
-        inv' '1' = '0'
-        inv' _ = '1'
+revInvert = BS.map inv . BS.reverse
+  where inv '1' = '0'
+        inv _ = '1'
 
 
 testInput ::  Data

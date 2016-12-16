@@ -88,4 +88,6 @@ state in your puzzle input, what is the correct checksum for this disk?
 Your puzzle input was `10001001100000001`.
 
 ## Solution
-See [Solution](./Solution.fsx)
+
+- F# [Solution](./Solution.fsx)
+- Haskell [Solution](./Main.hs) - should be compiled with `-O2` and run
