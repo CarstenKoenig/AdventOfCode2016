@@ -47,9 +47,9 @@ part2' = part2'' . Seq.viewl
 
 part2'' :: Seq.ViewL Elf -> Maybe Elf
 part2'' Seq.EmptyL = Nothing
-part2'' (x Seq.:< ys)
-  | Seq.null ys = Just x
+part2'' (x Seq.:< xs)
+  | Seq.null xs = Just x
   | otherwise = 
-      part2' ((l Seq.>< Seq.drop 1 r) Seq.|> x)
-  where (l,r) = Seq.splitAt (half (length ys)) ys
-        half x = (x-1) `div` 2
+      part2' $ (l Seq.>< Seq.drop 1 r) Seq.|> x
+  where (l,r) = Seq.splitAt (mid xs) xs
+        mid xs = (length xs - 1) `div` 2
