@@ -20,6 +20,8 @@ executable Day17
   build-depends:       base >=4.9 && < 5
                      , containers
                      , PSQueue
+                     , bytestring
+                     , cryptohash
                      
   -- hs-source-dirs:      
   default-language:    Haskell2010
