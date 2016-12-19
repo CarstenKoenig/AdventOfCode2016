@@ -42,15 +42,14 @@ reduce (a : _ : as) acc = reduce as (a : acc)
 part2 :: [Elf] -> Elf
 part2 = fromJust . part2' . Seq.fromList
 
-
 part2' :: Seq Elf -> Maybe Elf
-part2' xs =
-  case Seq.viewl xs of
-    Seq.EmptyL -> Nothing
-    x Seq.:< ys
-      | Seq.null ys ->
-          Just x
-      | otherwise ->
-          part2' ((l Seq.>< Seq.drop 1 r) Seq.|> x)
-          where (l,r) = Seq.splitAt (half (length ys)) ys
-                half x = (x-1) `div` 2
+part2' = part2'' . Seq.viewl
+
+part2'' :: Seq.ViewL Elf -> Maybe Elf
+part2'' Seq.EmptyL = Nothing
+part2'' (x Seq.:< ys)
+  | Seq.null ys = Just x
+  | otherwise = 
+      part2' ((l Seq.>< Seq.drop 1 r) Seq.|> x)
+  where (l,r) = Seq.splitAt (half (length ys)) ys
+        half x = (x-1) `div` 2
