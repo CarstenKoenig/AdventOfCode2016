@@ -7,19 +7,17 @@ import Prelude hiding (Left, Right)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as L
-import Data.ByteString.Char8 (snoc, pack, unpack, index, group)
-import qualified Data.ByteString.Lazy.Char8 as C8
+import Data.ByteString.Char8 (snoc, unpack, index)
 import Data.ByteString.Builder (byteStringHex, toLazyByteString)
 import Crypto.Hash.MD5 (hash)
 import Numeric (showHex)
 import Data.Maybe (catMaybes)
 import Data.Char (isAlpha)
 
-import Debug.Trace (trace)
-
 main :: IO ()
 main = do
-  putStrLn $ "Part 1: " ++ show (path <$> solve)
+  putStrLn $ "Part 1: " ++ show (path part1)
+  putStrLn $ "Part 2: " ++ show part2
   putStrLn "all done"
 
 
@@ -36,10 +34,17 @@ goalCoord :: (Int,Int)
 goalCoord = (3,3)
 
 
-solve :: Maybe Node
-solve =
+part1 :: Node
+part1 =
   let start = Node "" startCoord
-  in shortestPath [start]
+      paths' = paths [start]
+  in head paths'
+
+
+part2 :: Int
+part2 =
+  let start = Node "" startCoord
+  in maximum $ pathLens [start]
 
 
 data Node = Node
@@ -54,14 +59,17 @@ data Directions
   deriving Show
 
 
-shortestPath :: [Node] -> Maybe Node
-shortestPath [] = Nothing
-shortestPath (node:nodes)
-  | isGoal node = Just node
-  | otherwise =
-    let nodes' = neighbors node
-    in shortestPath (nodes ++ nodes')
+pathLens :: [Node] -> [Int]
+pathLens = map (BS.length . path) . paths
+  
 
+paths :: [Node] -> [Node]
+paths [] = []
+paths (node:nodes) =
+  let nodes' = neighbors node
+  in if isGoal node
+     then node : paths nodes
+     else paths (nodes ++ nodes')
 
 
 neighbors :: Node -> [Node]
@@ -102,7 +110,8 @@ hashDirs node =
     _ -> []
 
   where
-    valid dir c | isAlpha c = Just dir
+    valid dir c | isAlpha c && c /= 'a'
+      = Just dir
     valid _ _ = Nothing
       
 
