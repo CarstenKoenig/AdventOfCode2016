@@ -6,6 +6,7 @@ main :: IO ()
 main = do
   inp <- input
   putStrLn $ "Part 1: " ++ show (safeTiles inp 40)
+  putStrLn $ "Part 2: " ++ show (safeTiles inp 400000)
   putStrLn "all done"
 
 
