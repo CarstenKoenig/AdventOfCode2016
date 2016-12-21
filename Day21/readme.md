@@ -1,8 +1,6 @@
-# Day 21: ??
+# Day 21: Scrambled Letters and Hash
 
-## Part 1
-
-## Part 2
+instructions at [Advent of Code](http://adventofcode.com/2016/day/21)
 
 ## Solution
 See [Solution](./Main.hs)
