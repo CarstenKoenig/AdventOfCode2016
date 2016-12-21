@@ -46,6 +46,12 @@ failParse :: Parser a
 failParse = Parser (\_ -> Nothing)
 
 
+parseOneOf :: [Parser a] -> Parser a
+parseOneOf (a:b:rest) = parseOneOf (parseEither a b : rest)
+parseOneOf [p] = p
+parseOneOf _ = failParse
+
+
 parseEither :: Parser a -> Parser a -> Parser a
 parseEither pa pb =
   Parser (\inp ->
