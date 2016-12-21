@@ -1,11 +1,22 @@
 module Main where
 
+import Data.List (elemIndex, foldl', inits)
 import Data.Maybe (catMaybes)
 
 import Parser
 
+
+text :: String
+text = "abcdefgh" -- should be bfheacgd
+
+scrampeled :: String
+scrampeled = "fbgdceah"
+
 main :: IO ()
 main = do
+  insts <- instructions
+  putStrLn $ "Part 1: " ++ process insts text
+  putStrLn $ "Part 2: " ++ processInv insts scrampeled
   putStrLn "all done"
 
 
@@ -18,6 +29,56 @@ data Instruction
   | Move Int Int
   deriving Show
 
+
+process :: [Instruction] -> String -> String
+process insts input = foldl' (flip apply) input insts
+
+
+processInv :: [Instruction] -> String -> String
+processInv insts input = foldl' (flip applyInv) input (reverse insts)
+
+
+apply :: Instruction -> String -> String
+apply (SwapPos a b) input =
+  apply (SwapLetter (input !! a) (input !! b)) input
+apply (SwapLetter a b) input =
+  map swap input
+  where swap c
+          | c == a = b
+          | c == b = a
+          | otherwise = c
+apply (Rotate n) input =
+  take l $ drop (n `mod` l) $ cycle input
+  where l = length input
+apply (RotateOn c) input =
+  case elemIndex c input of
+    Nothing -> input
+    Just n ->
+      let r = if n >= 4 then n+2 else n+1
+      in apply (Rotate $ negate r) input
+apply (Reverse a b) input
+  | a > b = apply (Reverse b a) input
+  | a <= b =
+    let (prev,end) = splitAt (b+1) input
+        (start, mid) = splitAt a prev
+    in concat [start, reverse mid, end]
+apply (Move a b) input =
+  let (prev,(ca:rest)) = splitAt a input
+      (prev', end) = splitAt b (prev++rest)
+  in prev' ++ ca:end
+
+
+applyInv :: Instruction -> String -> String
+applyInv x@(SwapPos _ _) input = apply x input
+applyInv x@(SwapLetter _ _) input = apply x input
+applyInv (Rotate n) input = apply (Rotate $ negate n) input
+applyInv (RotateOn c) input =
+  head $ [ xs | i <- [0..length input-1]
+              , let xs = apply (Rotate i) input
+              , apply (RotateOn c) xs == input ]
+applyInv x@(Reverse _ _) input = apply x input
+applyInv (Move a b) input = apply (Move b a) input
+  
 
 instructions :: IO [Instruction]
 instructions =
@@ -93,3 +154,25 @@ moveP = do
   parseString "to position"
   b <- parseNumber
   return $ Move a b
+
+
+----------------------------------------------------------------------
+-- test
+test :: [String]
+test = map (\is -> process is "abcde") $ inits testInstructions
+
+
+testInv :: String
+testInv = processInv testInstructions "decab"
+
+
+testInstructions =
+  [ SwapPos 4 0
+  , SwapLetter 'd' 'b'
+  , Reverse 0 4
+  , Rotate 1
+  , Move 1 4
+  , Move 3 0
+  , RotateOn 'b'
+  , RotateOn 'd'
+  ]
