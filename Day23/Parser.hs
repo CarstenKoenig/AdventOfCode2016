@@ -43,7 +43,24 @@ eval p = (fst <$>) . runParser p
 
 
 failParse :: Parser a
-failParse = Parser (\_ -> Nothing)
+failParse = Parser (const Nothing)
+
+
+parseList :: Char -> Char -> Char -> Parser a -> Parser [a]
+parseList lBrac rBrac sep p =
+  parseBetween (parseChar lBrac) (parseChar rBrac) $ p `parseSepBy` (parseChar sep)
+
+
+parseBetween :: Parser l -> Parser r -> Parser a -> Parser a
+parseBetween pL pR pA = pL *> pA <* pR
+
+
+parseSepBy :: Parser a -> Parser sep -> Parser [a]
+parseSepBy pa ps = parseEither (parseSepBy1 pa ps) (pure [])
+
+
+parseSepBy1 :: Parser a -> Parser sep -> Parser [a]
+parseSepBy1 pa ps = (:) <$> pa <*> parseEither (ps *> parseSepBy1 pa ps) (pure [])
 
 
 parseOneOf :: [Parser a] -> Parser a
@@ -58,7 +75,7 @@ parseEither pa pb =
             case runParser pa inp of
               Nothing -> runParser pb inp
               success -> success)
-  
+
 
 parseMany :: Parser a -> Parser [a]
 parseMany p =
@@ -79,21 +96,25 @@ parseAny =
               _ -> Nothing)
 
 
-parseChar :: (Char -> Bool) -> Parser Char
-parseChar f =
+parsePred :: (Char -> Bool) -> Parser Char
+parsePred f =
   Parser (\inp ->
             case inp of
               c:rem | f c -> Just (c, rem)
               _ -> Nothing)
 
-  
+
 parseString :: String -> Parser ()
 parseString s =
   Parser (\inp ->
             if s `isPrefixOf` inp
             then Just ((), drop (length s) inp)
             else Nothing)
-  
+
+
+parseChar :: Char -> Parser ()
+parseChar c = parsePred (== c) *> pure ()
+
 
 parseDigits :: Parser String
 parseDigits = parseMany parseDigit
@@ -131,7 +152,7 @@ parseNumber = do
 parseNegNumber :: Parser Int
 parseNegNumber = do
   parseWhiteSpaces
-  parseChar (== '-')
+  parseChar '-'
   ds <- parseDigits
   if null ds
     then failParse
@@ -144,16 +165,18 @@ parseInt :: Parser Int
 parseInt =
   parseEither parseNegNumber parseNumber
 
-parseAlpha :: Parser Char
-parseAlpha = parseChar isAlpha
 
-  
+parseAlpha :: Parser Char
+parseAlpha = parsePred isAlpha
+
+
 parseDigit :: Parser Char
-parseDigit = parseChar isDigit
-  
+parseDigit = parsePred isDigit
+
 
 parseWhiteSpace :: Parser Char
-parseWhiteSpace = parseChar isSpace
+parseWhiteSpace = parsePred isSpace
+
 
 ignoreWhiteSpace :: Parser ()
 ignoreWhiteSpace = do
