@@ -20,6 +20,15 @@ main = do
   inp <- readNodes
   putStrLn $ "part 1: " ++ show (part1 inp)
 
+--- Part 2:
+-- for wart two I mapped the "walls" with
+-- filter (\n -> nodeUsed n > 100)
+-- wich gave a line of walls between (13,19) and (37,19) (end of grid)
+-- so you have to move around it starting at the empty node ad (35,24)
+-- to (35,20) to (12,20) to (12,0) to (37,0)
+-- from there strts the 5-cycle from the home page which leads to a total
+-- number of
+-- 23 + 25 + 24 + 5*36 = 252 steps which was the answer
 
 part1 :: [Node] -> Int
 part1 nodes = go 0 used avail - selfFit
