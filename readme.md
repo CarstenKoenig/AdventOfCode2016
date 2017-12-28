@@ -36,3 +36,13 @@ needs you to retrieve all fifty stars by December 25th.
 - [Day 23](./Day23/readme.md)
 - [Day 24](./Day24/readme.md)
 - [Day 25](./Day25/readme.md)
+
+## the end
+You activate all **fifty** stars and transmit the signal. 
+The star atop the antenna begins to glow.
+
+Suddenly, you see the sleigh fly past you!
+
+Looks like Santa was already waiting for your signal.
+
+![finished](./finished.png)
