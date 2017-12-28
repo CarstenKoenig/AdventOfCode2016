@@ -4,7 +4,7 @@ import Data.Char (isDigit)
 import Data.Graph.AStar
 import qualified Data.HashSet as HS
 import qualified Data.IntMap.Lazy as M
-import Data.List ((\\))
+import Data.List ((\\), sort)
 import Data.Maybe (fromJust)
 import qualified Data.Set as S
 
@@ -26,6 +26,9 @@ main = do
   let opt = optimalRoute0 mz
   putStrLn $ "part 1: " ++ show opt ++ " - " ++ show (routeLength mz opt)
 
+  let opt' = optimalRoute1 mz
+  putStrLn $ "part 2: " ++ show opt' ++ " - " ++ show (routeLength mz opt')
+
 
 routeLength :: Maze -> [Pos] -> Dist
 routeLength mz ps = sum $ zipWith (distance mz) ps (tail ps)
@@ -38,6 +41,17 @@ optimalRoute0 mz = (0 :) . map fst . fromJust $ aStar neigh dist heur goal (0, [
         neigh (_,vs) = HS.fromList [ (p, p : vs) | p <- (ks \\ vs) ]
         goal  (_, vs) = length vs == length ks
         ks     = M.keys (positions mz)
+
+
+optimalRoute1 :: Maze -> [Pos]
+optimalRoute1 mz = (0 :) . map fst . fromJust $ aStar neigh dist heur goal (0, [0])
+  where heur   = const 0
+        dist (f,_) (t,_) = distance mz f t
+        neigh (_,vs)     = HS.fromList [ (p, p : vs) | p <- more vs ]
+        goal  (p, vs)    = p == 0 && length vs == length ks + 1
+        ks               = M.keys (positions mz)
+        more vs          = let vs' = ks \\ vs in if null vs' then [0] else vs'
+
 
 
 initMaze :: Maze
