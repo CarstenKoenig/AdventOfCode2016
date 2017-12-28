@@ -14,12 +14,10 @@ cabal-version:       >=1.10
 
 executable Day24
   main-is:             Main.hs
-  other-modules:       Parser
-                     , Astar
-  -- other-extensions:
   build-depends:       base >=4.9 && < 5
                      , containers
-                     , PSQueue
+                     , unordered-containers
+                     , astar
                      , mtl
                      
   -- hs-source-dirs:      

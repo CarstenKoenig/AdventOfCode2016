@@ -1,10 +1,12 @@
 module Main where
 
-import qualified Data.IntMap.Lazy as M
-import qualified Data.Set as S
 import Data.Char (isDigit)
-import Astar
-import Parser
+import Data.Graph.AStar
+import qualified Data.HashSet as HS
+import qualified Data.IntMap.Lazy as M
+import Data.List ((\\))
+import Data.Maybe (fromJust)
+import qualified Data.Set as S
 
 
 data Maze =
@@ -20,11 +22,26 @@ type Coord = (Int,Int)
 
 main :: IO ()
 main = do
-  putStrLn "all done"
+  mz <- readMaze "input.txt"
+  let opt = optimalRoute0 mz
+  putStrLn $ "part 1: " ++ show opt ++ " - " ++ show (routeLength mz opt)
+
+
+routeLength :: Maze -> [Pos] -> Dist
+routeLength mz ps = sum $ zipWith (distance mz) ps (tail ps)
+
+
+optimalRoute0 :: Maze -> [Pos]
+optimalRoute0 mz = (0 :) . map fst . fromJust $ aStar neigh dist heur goal (0, [0])
+  where heur   = const 0
+        dist (f,_) (t,_) = distance mz f t
+        neigh (_,vs) = HS.fromList [ (p, p : vs) | p <- (ks \\ vs) ]
+        goal  (_, vs) = length vs == length ks
+        ks     = M.keys (positions mz)
 
 
 initMaze :: Maze
-initMaze = Maze S.empty M.empty 
+initMaze = Maze S.empty M.empty
 
 
 distance :: Maze -> Pos -> Pos -> Dist
@@ -39,14 +56,13 @@ distance mz =
 
 distance' :: Maze -> Coord -> Coord -> [Coord]
 distance' mz from to
-  | from <= to = aStar p from
+  | from <= to = fromJust $ aStar neigh manhatten heur goal from
   | otherwise  = distance' mz to from
-  where p           = Parameter heur neigh goal id
-        heur        = manhatten to
-        neigh (x,y) = filter notWall
-                      [ (x-1,y-1), (x,y-1), (x+1,y-1)
+  where heur        = manhatten to
+        neigh (x,y) = HS.fromList $ filter notWall
+                      [            (x,y-1)
                       , (x-1,y),            (x+1,y)
-                      , (x-1,y+1), (x,y+1), (x+1,y+1)
+                      ,            (x,y+1)
                       ]
         goal        = (== to)
         manhatten (x,y) (x',y') = abs (x'-x) + abs (y'-y)
